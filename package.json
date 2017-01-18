@@ -1,0 +1,33 @@
+{
+  "name": "@ambassify/fetch-retried",
+  "version": "1.0.0",
+  "description": "Use the fetch API to run requests, implementing retries",
+  "main": "src/index.js",
+  "scripts": {
+    "release": "npm version patch && npm publish",
+    "test": "eslint src"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ambassify/fetch-retried.git"
+  },
+  "keywords": [
+    "node-fetch",
+    "fetch",
+    "retry",
+    "exponential backoff",
+    "backoff"
+  ],
+  "author": "Ambassify <dev@ambassify.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ambassify/fetch-retried/issues"
+  },
+  "homepage": "https://github.com/ambassify/fetch-retried#readme",
+  "dependencies": {
+    "node-fetch": "^1.6.3"
+  },
+  "devDependencies": {
+    "eslint": "^3.12.2"
+  }
+}
