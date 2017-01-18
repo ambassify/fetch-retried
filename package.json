@@ -5,7 +5,9 @@
   "main": "src/index.js",
   "scripts": {
     "release": "npm version patch && npm publish",
-    "test": "eslint src"
+    "test": "npm -s run test:lint && npm -s run test:unit",
+    "test:lint": "eslint src",
+    "test:unit": "nyc mocha"
   },
   "repository": {
     "type": "git",
@@ -28,6 +30,9 @@
     "node-fetch": "^1.6.3"
   },
   "devDependencies": {
-    "eslint": "^3.12.2"
+    "eslint": "^3.12.2",
+    "mocha": "^3.2.0",
+    "nyc": "^10.1.2",
+    "sinon": "^1.17.7"
   }
 }

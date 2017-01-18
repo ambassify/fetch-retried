@@ -37,19 +37,19 @@ function fetchRetried(config = {}) {
     function fetch(url, options) {
         return _fetch(url, options)
             .then(resp => {
-                if (isOK(resp))
+                if (attempts >= retries)
                     return resp;
 
-                if (attempts >= retries)
+                if (isOK(resp))
                     return resp;
 
                 return retry(url, options);
             })
             .catch(error => {
-                if(!shouldRetryError(error))
+                if (attempts >= retries)
                     throw error;
 
-                if (attempts >= retries)
+                if(!shouldRetryError(error))
                     throw error;
 
                 return retry(url, options);
