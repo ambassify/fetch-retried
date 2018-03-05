@@ -9,6 +9,13 @@ function binaryExponential(delay = 1) {
     return (attempts) => (Math.pow(2, attempts) - 1) * delay;
 }
 
+function sleep(timeout) {
+    if (timeout < 1)
+        return Promise.resolve();
+
+    return new Promise(resolve => setTimeout(resolve, timeout));
+}
+
 /**
  * Retry logic
  */
@@ -20,22 +27,15 @@ function fetchRetried(config = {}) {
         shouldRetryError = () => true
     } = config;
 
-    const _fetch = config.fetch || require('node-fetch');
+    const _fetch = config.fetch || require('@ambassify/fetch');
 
     const timeout = (typeof delay === 'function') ? delay : exponential(delay);
 
-    let attempts = 0;
-    function retry(url, options) {
-        attempts++;
+    function execute(url, options, attempts = 0) {
+        const wait = timeout(attempts);
 
-        return new Promise((resolve, reject) => setTimeout(
-            () => fetch(url, options).then(resolve, reject),
-            timeout(attempts)
-        ));
-    }
-
-    function fetch(url, options) {
-        return _fetch(url, options)
+        return sleep(wait)
+            .then(() => _fetch(url, options))
             .then(resp => {
                 if (attempts >= retries)
                     return resp;
@@ -43,7 +43,7 @@ function fetchRetried(config = {}) {
                 if (isOK(resp))
                     return resp;
 
-                return retry(url, options);
+                return execute(url, options, attempts + 1);
             })
             .catch(error => {
                 if (attempts >= retries)
@@ -52,11 +52,14 @@ function fetchRetried(config = {}) {
                 if(!shouldRetryError(error))
                     throw error;
 
-                return retry(url, options);
+                return execute(url, options, attempts + 1);
             });
     }
 
-    return fetch;
+    return function fetch(url, options) {
+        // protect the `attempts` parameter
+        return execute(url, options);
+    }
 }
 
 fetchRetried.exponential = exponential;
