@@ -24,12 +24,27 @@ function fetchRetried(config = {}) {
         delay = 30 * 1000,
         retries = 5,
         isOK = (resp) => resp.ok,
-        shouldRetryError = () => true
+        shouldRetryError = () => true,
+        retryMethods = ['PUT','DELETE','GET','HEAD','PATCH','OPTIONS']
     } = config;
 
     const _fetch = config.fetch || require('@ambassify/fetch');
 
     const timeout = (typeof delay === 'function') ? delay : exponential(delay);
+
+    function shouldRetry(url, options, attempts) {
+        const {
+            method = 'GET'
+        } = options || {};
+
+        if (retryMethods.indexOf(method.toUpperCase()) < 0)
+            return false;
+
+        if (attempts >= retries)
+            return false;
+
+        return true;
+    }
 
     function execute(url, options, attempts = 0) {
         const wait = timeout(attempts);
@@ -37,16 +52,15 @@ function fetchRetried(config = {}) {
         return sleep(wait)
             .then(() => _fetch(url, options))
             .then(resp => {
-                if (attempts >= retries)
+                if (!shouldRetry(url, options, attempts))
                     return resp;
 
                 if (isOK(resp))
                     return resp;
 
                 return execute(url, options, attempts + 1);
-            })
-            .catch(error => {
-                if (attempts >= retries)
+            }, error => {
+                if (!shouldRetry(url, options, attempts))
                     throw error;
 
                 if(!shouldRetryError(error))

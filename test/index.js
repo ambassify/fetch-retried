@@ -16,7 +16,7 @@ describe('#fetchRetry', function() {
     it('Should not retry when not required', function() {
         const options = {
             fetch: function(url) {
-                assert.equal(url, 'https://www.google.com');
+                assert.equal(url, 'https://example.ambassify.eu');
 
                 return Promise.resolve({ ok: true });
             }
@@ -25,8 +25,27 @@ describe('#fetchRetry', function() {
         const fetchSpy = sinon.spy(options, 'fetch');
         const fetch = fetchRetried(options);
 
-        return fetch('https://www.google.com')
+        return fetch('https://example.ambassify.eu')
             .then(() => {
+                assert(fetchSpy.calledOnce);
+            });
+    })
+
+    it('Should not retry non-idempotent methods', function() {
+        const options = {
+            fetch: function(url) {
+                assert.equal(url, 'https://example.ambassify.eu');
+
+                return Promise.resolve({ ok: false });
+            }
+        };
+
+        const fetchSpy = sinon.spy(options, 'fetch');
+        const fetch = fetchRetried(options);
+
+        return fetch('https://example.ambassify.eu', { method: 'POST' })
+            .then(resp => {
+                assert(!resp.ok, 'Request failed');
                 assert(fetchSpy.calledOnce);
             });
     })
@@ -36,7 +55,7 @@ describe('#fetchRetry', function() {
         const options = {
             delay: 10,
             fetch: function(url) {
-                assert.equal(url, 'https://www.google.com');
+                assert.equal(url, 'https://example.ambassify.eu');
 
                 return Promise.resolve({ ok: attempts++ > 1 });
             }
@@ -45,7 +64,7 @@ describe('#fetchRetry', function() {
         const fetchSpy = sinon.spy(options, 'fetch');
         const fetch = fetchRetried(options);
 
-        return fetch('https://www.google.com')
+        return fetch('https://example.ambassify.eu')
             .then(() => {
                 assert.equal(fetchSpy.callCount, 3, 'fetch called three times');
                 assert.equal(attempts, 3);
@@ -58,7 +77,7 @@ describe('#fetchRetry', function() {
             delay: 10,
             retries: 5,
             fetch: function(url) {
-                assert.equal(url, 'https://www.google.com');
+                assert.equal(url, 'https://example.ambassify.eu');
 
                 return Promise.resolve({ ok: false, attempts: ++attempts });
             }
@@ -67,7 +86,7 @@ describe('#fetchRetry', function() {
         const fetchSpy = sinon.spy(options, 'fetch');
         const fetch = fetchRetried(options);
 
-        return fetch('https://www.google.com')
+        return fetch('https://example.ambassify.eu')
             .then(resp => {
                 assert(!resp.ok, 'response not OK');
                 assert.equal(resp.attempts, 6);
@@ -82,7 +101,7 @@ describe('#fetchRetry', function() {
             retries: 5,
             shouldRetryError: () => true,
             fetch: function(url) {
-                assert.equal(url, 'https://www.google.com');
+                assert.equal(url, 'https://example.ambassify.eu');
 
                 return Promise.reject({ attempts: ++attempts });
             }
@@ -92,7 +111,7 @@ describe('#fetchRetry', function() {
         const errorSpy = sinon.spy(options, 'shouldRetryError');
         const fetch = fetchRetried(options);
 
-        return fetch('https://www.google.com')
+        return fetch('https://example.ambassify.eu')
             .then(() => { throw new Error('Should throw'); }, err => {
                 assert.equal(err.attempts, 6);
                 assert.equal(fetchSpy.callCount, 6, 'fetch called six times');
@@ -106,7 +125,7 @@ describe('#fetchRetry', function() {
             delay: 10,
             retries: 5,
             fetch: function(url) {
-                assert.equal(url, 'https://www.google.com');
+                assert.equal(url, 'https://example.ambassify.eu');
 
                 return Promise.reject({ attempts: ++attempts });
             }
@@ -115,7 +134,7 @@ describe('#fetchRetry', function() {
         const fetchSpy = sinon.spy(options, 'fetch');
         const fetch = fetchRetried(options);
 
-        return fetch('https://www.google.com')
+        return fetch('https://example.ambassify.eu')
             .then(() => { throw new Error('Should throw'); }, err => {
                 assert.equal(err.attempts, 6);
                 assert.equal(fetchSpy.callCount, 6, 'fetch called six times');
@@ -129,7 +148,7 @@ describe('#fetchRetry', function() {
             retries: 5,
             shouldRetryError: () => false,
             fetch: function(url) {
-                assert.equal(url, 'https://www.google.com');
+                assert.equal(url, 'https://example.ambassify.eu');
 
                 return Promise.reject({ attempts: ++attempts });
             }
@@ -139,7 +158,7 @@ describe('#fetchRetry', function() {
         const errorSpy = sinon.spy(options, 'shouldRetryError');
         const fetch = fetchRetried(options);
 
-        return fetch('https://www.google.com')
+        return fetch('https://example.ambassify.eu')
             .then(() => { throw new Error('Should throw'); }, err => {
                 assert.equal(err.attempts, 1);
                 assert.equal(fetchSpy.callCount, 1, 'fetch called once');
