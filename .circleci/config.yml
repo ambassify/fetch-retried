@@ -1,0 +1,15 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: node:8
+    steps:
+      - checkout
+      - restore_cache:
+          key: dependencies-{{ checksum "package.json" }}
+      - run: npm install
+      - save_cache:
+          key: dependencies-{{ checksum "package.json" }}-{{ .BuildNum }}
+          paths:
+            - node_modules
+      - run: npm test
