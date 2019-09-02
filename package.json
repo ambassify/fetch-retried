@@ -27,7 +27,7 @@
   },
   "homepage": "https://github.com/ambassify/fetch-retried#readme",
   "dependencies": {
-    "@ambassify/fetch": "^1.0.1"
+    "@ambassify/fetch": "^2.1.0"
   },
   "devDependencies": {
     "eslint": "^3.12.2",
