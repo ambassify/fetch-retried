@@ -3,11 +3,14 @@
   "version": "1.2.1",
   "description": "Use the fetch API to run requests, implementing retries",
   "main": "src/index.js",
+  "browser": "dist/index.js",
   "scripts": {
     "release": "npm version patch && npm publish",
+    "build": "babel -d dist src",
     "test": "npm -s run test:lint && npm -s run test:unit",
     "test:lint": "eslint src",
-    "test:unit": "nyc mocha"
+    "test:unit": "nyc mocha",
+    "prepublishOnly": "npm -s run test && npm -s run build"
   },
   "repository": {
     "type": "git",
@@ -30,6 +33,9 @@
     "@ambassify/fetch": "^2.1.0"
   },
   "devDependencies": {
+    "@babel/cli": "^7.8.4",
+    "@babel/core": "^7.9.0",
+    "@babel/preset-env": "^7.9.5",
     "eslint": "^6.8.0",
     "mocha": "^3.2.0",
     "nyc": "^10.1.2",
