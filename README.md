@@ -16,7 +16,7 @@ will use your desired config.
 
 ```javascript
 const fetchRetried = require('@ambassify/fetch-retried');
-const fetch = fetchRetried({ delay: 30000 });
+const fetch = fetchRetried({ delay: 100 });
 
 fetch('https://www.google.com')
     .then(resp => resp.json())
@@ -27,10 +27,11 @@ fetch('https://www.google.com')
 
 All options are optional and have default values.
 
- - **delay**: When using the default `exponential` backoff, the delay used in to calculate the timeout. Otherwise a method that calculated the timeout used. (default: `30000`)
+ - **delay**: When using the default `exponential` backoff, the delay used to calculate the timeout. Otherwise a method that calculated the timeout used. (default: `200`)
  - **retries**: The number of times to retry a request. (default: `5`)
  - **isOK**: A method that determines whether a request succeeded by returning `true` or `false` when passed a response. (default: `(resp) => resp.ok`)
  - **shouldRetryError**: When fetch throws an error this method determines whether the request is retried by returning `true` or `false` (default: `() => true`)
+ - **retryMethods**: Which HTTP verbs to retry (default: `['PUT', 'DELETE', 'GET', 'HEAD', 'PATCH', 'OPTIONS']`)
  - **fetch**: The underlying fetch implementation to use. (default: `require('node-fetch')`)
 
 ### Backoff strategies
