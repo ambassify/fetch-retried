@@ -21,7 +21,10 @@ function sleep(timeout) {
  */
 function fetchRetried(config = {}) {
     const {
-        delay = 30 * 1000,
+        // 5 * 5 * 200
+        // = 0.2s + 0.8s + 1.8s + 3.2s + 5s =
+        // = 11s max wait
+        delay = 200,
         retries = 5,
         isOK = (resp) => resp.ok,
         shouldRetryError = () => true,
