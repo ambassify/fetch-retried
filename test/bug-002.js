@@ -21,7 +21,11 @@ describe('#bug-002', function() {
             fetch: function(url) {
                 assert.equal(url, 'https://example.ambassify.eu/');
 
-                return Promise.resolve({ ok: false, attempts: ++attempts });
+                return Promise.resolve({
+                    ok: false,
+                    status: 500,
+                    attempts: ++attempts
+                });
             }
         };
 

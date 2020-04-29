@@ -57,7 +57,11 @@ describe('#fetchRetry', function() {
             fetch: function(url) {
                 assert.equal(url, 'https://example.ambassify.eu');
 
-                return Promise.resolve({ ok: attempts++ > 1 });
+                const ok = attempts++ > 1;
+                return Promise.resolve({
+                    ok,
+                    status: ok ? 200 : 502
+                });
             }
         };
 
@@ -79,7 +83,11 @@ describe('#fetchRetry', function() {
             fetch: function(url) {
                 assert.equal(url, 'https://example.ambassify.eu');
 
-                return Promise.resolve({ ok: false, attempts: ++attempts });
+                return Promise.resolve({
+                    ok: false,
+                    status: 500,
+                    attempts: ++attempts
+                });
             }
         };
 

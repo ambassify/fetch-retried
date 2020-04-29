@@ -26,7 +26,13 @@ function fetchRetried(config = {}) {
         // = 11s max wait
         delay = 200,
         retries = 5,
-        isOK = (resp) => resp.ok,
+
+        // Status code handling
+        // 0 is a failed request
+        // 100 < 400 is a successful request
+        // 400 < 500 are user errors and retries are useless
+        // 500 >= server errors, retry
+        isOK = (resp) => !resp.status || resp.status < 500,
         shouldRetryError = () => true,
         retryMethods = ['PUT','DELETE','GET','HEAD','PATCH','OPTIONS']
     } = config;
