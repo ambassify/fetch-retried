@@ -1,6 +1,6 @@
 {
   "name": "@ambassify/fetch-retried",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "Use the fetch API to run requests, implementing retries",
   "main": "src/index.js",
   "browser": "dist/index.js",
