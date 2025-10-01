@@ -31,7 +31,8 @@ All options are optional and have default values.
  - **retries**: The number of times to retry a request. (default: `5`)
  - **isOK**: A method that determines whether a request succeeded by returning `true` or `false` when passed a response. (default: `(resp) => resp.ok`)
  - **shouldRetryError**: When fetch throws an error this method determines whether the request is retried by returning `true` or `false` (default: `() => true`)
- - **retryMethods**: Which HTTP verbs to retry (default: `['PUT', 'DELETE', 'GET', 'HEAD', 'PATCH', 'OPTIONS']`)
+ - **retryMethods**: Which HTTP verbs to retry (default: `['PUT', 'DELETE', 'GET', 'HEAD', 'PATCH', 'OPTIONS']`).
+ - **shouldRetry**: Allows you to override the default method to check if a retry should be tried. Takes a function that accepts the following signature: `shouldRetry(url, requestOptions, { attempts, config, error, response })`.
  - **fetch**: The underlying fetch implementation to use. (default: `require('node-fetch')`)
 
 ### Backoff strategies

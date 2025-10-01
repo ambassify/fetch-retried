@@ -174,6 +174,76 @@ describe('#fetchRetry', function() {
             });
     })
 
+    it ('should accept a shouldRetry method', function() {
+        let tries = 0;
+        const fixtError = new Error('Fetch Error');
+        const options = {
+            delay: 10,
+            retries: 5,
+            shouldRetry: (url, requestOptions, { attempts, error }) => {
+                assert.equal(url, 'https://example.ambassify.eu');
+                assert.strictEqual(error, fixtError);
+                assert(attempts < 2, 'Must not try more than twice');
+
+                if (attempts == 0)
+                    return true;
+
+                return false;
+            },
+            fetch: function(url) {
+                assert.equal(url, 'https://example.ambassify.eu');
+                tries += 1;
+                return Promise.reject(fixtError);
+            }
+        };
+
+        const fetch = fetchRetried(options);
+
+        return fetch('https://example.ambassify.eu')
+            .then(() => { throw new Error('Should throw'); }, err => {
+                assert.equal(tries, 2);
+                assert.strictEqual(err, fixtError);
+            });
+    })
+
+    it ('should pass the error or response when calling shouldRetry', function() {
+        let tries = 0;
+        const fixtError = new Error('Fetch Error');
+        const options = {
+            delay: 10,
+            retries: 5,
+            shouldRetry: (url, requestOptions, { attempts, error, response }) => {
+                assert.equal(url, 'https://example.ambassify.eu');
+                assert(attempts < 2, 'Must not try more than twice');
+
+                if (attempts == 0)
+                    assert(response, 'Must have response on first attempt');
+
+                if (attempts == 1)
+                    assert.strictEqual(error, fixtError);
+
+                return attempts == 0;
+            },
+            fetch: function(url) {
+                assert.equal(url, 'https://example.ambassify.eu');
+                tries += 1;
+
+                if (tries == 1)
+                    return Promise.resolve({ ok: false, status: 502 });
+
+                return Promise.reject(fixtError);
+            }
+        };
+
+        const fetch = fetchRetried(options);
+
+        return fetch('https://example.ambassify.eu')
+            .then(() => { throw new Error('Should throw'); }, err => {
+                assert.equal(tries, 2);
+                assert.strictEqual(err, fixtError);
+            });
+    })
+
 })
 
 
