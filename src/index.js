@@ -25,18 +25,37 @@ function hasRetriesLeft(retries = 5, attempts) {
     return attempts < retries;
 }
 
+function isValidResponse(resp) {
+    return !resp.status || resp.status < 500;
+}
+
 function defaultShouldRetry(url, requestOptions, options = {}) {
     const { method } = requestOptions || {};
-    const { attempts, config } = options || {};
+    const { attempts, response, error, config } = options || {};
     const {
         retries = 5,
         retryMethods = IDEMPOTENT_HTTP_METHODS,
+
+        isOK = isValidResponse,
+
+        // Status code handling
+        // 0 is a failed request
+        // 100 < 400 is a successful request
+        // 400 < 500 are user errors and retries are useless
+        // 500 >= server errors, retry
+        shouldRetryError = () => true,
     } = config || {};
 
-    if (!isRetryableMethod(retryMethods, method))
+    if (!hasRetriesLeft(retries, attempts))
         return false;
 
-    if (!hasRetriesLeft(retries, attempts))
+    if (response && isOK(response))
+        return false;
+
+    if (error && !shouldRetryError(error))
+        return false;
+
+    if (!isRetryableMethod(retryMethods, method))
         return false;
 
     return true;
@@ -52,23 +71,16 @@ function fetchRetried(config = {}) {
         // = 11s max wait
         delay = 200,
 
-        // Status code handling
-        // 0 is a failed request
-        // 100 < 400 is a successful request
-        // 400 < 500 are user errors and retries are useless
-        // 500 >= server errors, retry
-        isOK = (resp) => !resp.status || resp.status < 500,
-        shouldRetryError = () => true,
-
         shouldRetry = defaultShouldRetry,
         /* These are used by defaultShouldRetry */
         // retries = 5,
         // retryMethods = ['PUT','DELETE','GET','HEAD','PATCH','OPTIONS']
+        // isOK = (resp) => !resp.status || resp.status < 500,
+        // shouldRetryError = () => true,
     } = config;
 
     const _fetch = config.fetch || require('@ambassify/fetch');
     const timeout = (typeof delay === 'function') ? delay : exponential(delay);
-    const hasCustomRetry = (shouldRetry !== defaultShouldRetry);
 
     function _shouldRetry(url, requestOptions, options) {
         if (!hasRetriesLeft(config.retries, options.attempts))
@@ -86,15 +98,9 @@ function fetchRetried(config = {}) {
                 if (!_shouldRetry(url, options, { attempts, config, response: resp }))
                     return resp;
 
-                if (!hasCustomRetry && isOK(resp))
-                    return resp;
-
                 return execute(url, options, attempts + 1);
             }, error => {
                 if (!_shouldRetry(url, options, { attempts, config, error }))
-                    throw error;
-
-                if(!hasCustomRetry && !shouldRetryError(error))
                     throw error;
 
                 return execute(url, options, attempts + 1);
@@ -112,6 +118,7 @@ fetchRetried.binaryExponential = binaryExponential;
 
 fetchRetried.isConnectError = isConnectError;
 fetchRetried.hasRetriesLeft = hasRetriesLeft;
+fetchRetried.isValidResponse = isValidResponse;
 fetchRetried.isRetryableMethod = isRetryableMethod;
 fetchRetried.defaultShouldRetry = defaultShouldRetry;
 
