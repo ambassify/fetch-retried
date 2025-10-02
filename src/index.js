@@ -1,4 +1,7 @@
-const IDEMPOTENT_HTTP_METHODS = ['PUT','DELETE','GET','HEAD','PATCH','OPTIONS'];
+const isConnectError = require('./is-connect-error');
+const isRetryableMethod = require('./is-retryable-method');
+
+const { IDEMPOTENT_HTTP_METHODS } = isRetryableMethod;
 
 /**
  * Backoff strategies
@@ -16,13 +19,6 @@ function sleep(timeout) {
         return Promise.resolve();
 
     return new Promise(resolve => setTimeout(resolve, timeout));
-}
-
-function isRetryableMethod(retryMethods, method = 'GET') {
-    if (!Array.isArray(retryMethods))
-        return false;
-
-    return retryMethods.indexOf(method.toUpperCase()) >= 0;
 }
 
 function hasRetriesLeft(retries = 5, attempts) {
@@ -114,6 +110,7 @@ function fetchRetried(config = {}) {
 fetchRetried.exponential = exponential;
 fetchRetried.binaryExponential = binaryExponential;
 
+fetchRetried.isConnectError = isConnectError;
 fetchRetried.hasRetriesLeft = hasRetriesLeft;
 fetchRetried.isRetryableMethod = isRetryableMethod;
 fetchRetried.defaultShouldRetry = defaultShouldRetry;
