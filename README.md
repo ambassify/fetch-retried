@@ -70,6 +70,71 @@ function binaryExponential(delay = 1) {
 }
 ```
 
+## Helpers
+
+The same building blocks the default retry logic uses are attached to the
+default import, so you can reuse them when writing a custom `shouldRetry`.
+
+```javascript
+const fetchRetried = require('@ambassify/fetch-retried');
+```
+
+ - **`defaultShouldRetry(url, requestOptions, options)`**: The default retry
+   decision. Returns `false` once retries are exhausted, the response passes
+   `isOK`, `shouldRetryError` rejects the error, or the method is not in
+   `retryMethods`. Call it as the fallback in your own `shouldRetry` to keep the
+   default behaviour for cases you don't handle. `options` is
+   `{ attempts, config, error, response }`.
+
+ - **`isConnectError(err)`**: Returns `true` when an error happened during the
+   connection phase (DNS failure, connection refused, TLS handshake, undici
+   `onConnect*` frames, or an `AggregateError` where every error qualifies).
+   These requests never reached the server, so they are safe to retry even on
+   non-idempotent methods. The recognised early-stage codes are exposed on
+   `isConnectError.EARLY_STAGE_NET_ERRORS`.
+
+ - **`isRetryableMethod(retryMethods, method)`**: Returns `true` when `method`
+   (default `GET`) is present in the `retryMethods` array. Case-insensitive.
+
+ - **`IDEMPOTENT_HTTP_METHODS`**: The default `retryMethods` array —
+   `['PUT', 'DELETE', 'GET', 'HEAD', 'PATCH', 'OPTIONS']`. Also available as
+   `isRetryableMethod.IDEMPOTENT_HTTP_METHODS`.
+
+ - **`hasRetriesLeft(retries, attempts)`**: Returns `attempts < retries`
+   (`retries` defaults to `5`).
+
+ - **`isValidResponse(resp)`**: The default `isOK`. Returns `true` for responses
+   without a status or with a status below `500` (i.e. only `5xx` and failed
+   requests are retried).
+
+### Composing a custom `shouldRetry`
+
+Retry connection errors on top of the default behaviour:
+
+```javascript
+const {
+    isConnectError,
+    defaultShouldRetry,
+    IDEMPOTENT_HTTP_METHODS,
+} = require('@ambassify/fetch-retried');
+
+function shouldRetry(url, requestOptions, options) {
+    const { error } = options;
+
+    // Connection-phase errors never sent the request, retry regardless of method.
+    if (isConnectError(error))
+        return true;
+
+    return defaultShouldRetry(url, requestOptions, options);
+}
+
+const fetch = fetchRetried({
+    retries: 2,
+    shouldRetry,
+    retryMethods: IDEMPOTENT_HTTP_METHODS,
+});
+```
+
 ## Contribute
 
 We really appreciate any contribution you would like to make, so don't
